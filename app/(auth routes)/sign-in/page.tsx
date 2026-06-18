@@ -1,15 +1,45 @@
 "use client";
 
+import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { login } from "@/lib/api/clientApi";
+import { useAuthStore } from "@/lib/store/authStore";
+
 import css from "./SignInPage.module.css";
 
 export default function SignInPage() {
+    const router = useRouter();
+    const setUser = useAuthStore((state) => state.setUser);
+    const [error, setError] = useState("");
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setError("");
+        const form = event.currentTarget;
+        const formData = new FormData(form);
+
+        try {
+        const user = await login({
+            email: String(formData.get("email")),
+            password: String(formData.get("password")),
+        });
+
+        setUser(user);
+
+        router.push("/profile");
+        } catch {
+        setError("Login failed");
+        }
+    };
+
     return (
         <main className={css.mainContent}>
-        <form className={css.form}>
+        <form className={css.form} onSubmit={handleSubmit}>
             <h1 className={css.formTitle}>Sign in</h1>
 
             <div className={css.formGroup}>
             <label htmlFor="email">Email</label>
+
             <input
                 id="email"
                 type="email"
@@ -21,6 +51,7 @@ export default function SignInPage() {
 
             <div className={css.formGroup}>
             <label htmlFor="password">Password</label>
+
             <input
                 id="password"
                 type="password"
@@ -31,10 +62,19 @@ export default function SignInPage() {
             </div>
 
             <div className={css.actions}>
-            <button type="submit" className={css.submitButton}>
+            <button
+                type="submit"
+                className={css.submitButton}
+            >
                 Log in
             </button>
             </div>
+
+            {error && (
+            <p className={css.error}>
+                {error}
+            </p>
+            )}
         </form>
         </main>
     );
