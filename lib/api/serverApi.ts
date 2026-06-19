@@ -65,7 +65,7 @@ export async function checkSession(): Promise<AxiosResponse> {
 
     return api.get("/auth/session", {
         headers: {
-        Cookie: cookieHeader,
+            Cookie: cookieHeader,
         },
     });
 }
