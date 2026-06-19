@@ -69,7 +69,7 @@ export async function checkSession(): Promise<User | null> {
         },
         });
 
-        return response.data;
+        return response.data ?? null;
     } catch {
         return null;
     }
