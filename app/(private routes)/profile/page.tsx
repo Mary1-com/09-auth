@@ -4,15 +4,17 @@ import Link from "next/link";
 
 import { getMe } from "@/lib/api/serverApi";
 import css from "./ProfilePage.module.css";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
     title: "Profile | NoteHub",
     description: "User profile page in NoteHub.",
     };
 
-    export default async function ProfilePage() {
+export default async function ProfilePage() {
     const user = await getMe();
-
+    if (!user) { redirect("/sign-in"); }    
+    
     return (
         <main className={css.mainContent}>
         <div className={css.profileCard}>

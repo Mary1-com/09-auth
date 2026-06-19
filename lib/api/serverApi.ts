@@ -4,14 +4,16 @@ import { api } from "./api";
 import type { Note, NoteTag } from "@/types/note";
 import type { User } from "@/types/user";
 
-export interface FetchNotesResponse { notes: Note[]; totalPages: number; }
-
+export interface FetchNotesResponse {
+    notes: Note[];
+    totalPages: number;
+    }
 interface FetchNotesParams {
     page: number;
     search: string;
     perPage?: number;
     tag?: NoteTag;
-}
+    }
 
 async function getCookieHeader() {
     const cookieStore = await cookies();
@@ -20,7 +22,7 @@ async function getCookieHeader() {
         .getAll()
         .map((cookie) => `${cookie.name}=${cookie.value}`)
         .join("; ");
-}
+    }
 
 export async function fetchNotes({
     page = 1,
@@ -43,7 +45,7 @@ export async function fetchNotes({
     });
 
     return response.data;
-}
+    }
 
 export async function fetchNoteById(id: string): Promise<Note> {
     const cookieHeader = await getCookieHeader();
@@ -55,28 +57,36 @@ export async function fetchNoteById(id: string): Promise<Note> {
     });
 
     return response.data;
-}
+    }
 
 export async function checkSession(): Promise<User | null> {
-    const cookieHeader = await getCookieHeader();
+    try {
+        const cookieHeader = await getCookieHeader();
 
-    const response = await api.get<User | null>("/auth/session", {
+        const response = await api.get<User | null>("/auth/session", {
         headers: {
-        Cookie: cookieHeader,
+            Cookie: cookieHeader,
         },
-    });
+        });
 
-    return response.data;
-}
+        return response.data;
+    } catch {
+        return null;
+    }
+    }
 
-export async function getMe(): Promise<User> {
-    const cookieHeader = await getCookieHeader();
+export async function getMe(): Promise<User | null> {
+    try {
+        const cookieHeader = await getCookieHeader();
 
-    const response = await api.get<User>("/users/me", {
+        const response = await api.get<User>("/users/me", {
         headers: {
-        Cookie: cookieHeader,
+            Cookie: cookieHeader,
         },
-    });
+        });
 
-    return response.data;
+        return response.data;
+    } catch {
+        return null;
+    }
 }
