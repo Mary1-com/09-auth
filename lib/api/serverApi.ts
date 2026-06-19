@@ -59,32 +59,37 @@ export async function fetchNoteById(id: string): Promise<Note> {
     return response.data;
     }
 
-export async function checkSession(): Promise<User | null> {
+export async function checkSession(): Promise<{ success: boolean; setCookie?: string[]; }> {
     try {
         const cookieHeader = await getCookieHeader();
 
-        const response = await api.get<User | null>("/auth/session", {
-        headers: {
-            Cookie: cookieHeader,
-        },
+        const response = await api.get("/auth/session", {
+            headers: { Cookie: cookieHeader, },
         });
+        
+        const setCookie = response.headers["set-cookie"];
 
-        return response.data ?? null;
+        return {
+            success: true,
+            setCookie,
+        };
     } catch {
-        return null;
+        return {
+            success: false,
+        };
     }
-    }
+}
 
 export async function getMe(): Promise<User | null> {
     try {
         const cookieHeader = await getCookieHeader();
 
         const response = await api.get<User>("/users/me", {
-        headers: {
-            Cookie: cookieHeader,
-        },
+            headers: {
+                Cookie: cookieHeader,
+            },
         });
-
+        
         return response.data;
     } catch {
         return null;

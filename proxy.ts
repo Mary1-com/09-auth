@@ -1,47 +1,44 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { checkSession } from "@/lib/api/serverApi";
 
 const privateRoutes = ["/profile", "/notes"];
 const publicRoutes = ["/sign-in", "/sign-up"];
 
-async function isAuthenticated(request: NextRequest) {
-    try {
-        const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/users/me`,
-        {
-            headers: {
-            Cookie: request.headers.get("cookie") ?? "",
-            },
-        }
-        );
-
-        return response.ok;
-    } catch {
-        return false;
-    }
-    }
-
-    export async function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    const isPrivateRoute = privateRoutes.some((route) =>
-        pathname.startsWith(route)
-    );
+    const accessToken = request.cookies.get("accessToken");
+    const refreshToken = request.cookies.get("refreshToken");
 
-    const isPublicRoute = publicRoutes.some((route) =>
-        pathname.startsWith(route)
-    );
+    const isPrivateRoute = privateRoutes.some((route) => pathname.startsWith(route));
+    
+    const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
+    
+    let isAuthenticated = Boolean(accessToken);
 
-    const auth = await isAuthenticated(request);
+    const response = NextResponse.next();
 
-    if (isPrivateRoute && !auth) {
+    if (!accessToken && refreshToken) {
+        const session = await checkSession();
+
+        if (session.success) {
+        isAuthenticated = true;
+
+        session.setCookie?.forEach((cookie) => {
+            response.headers.append("set-cookie", cookie);
+        });
+        }
+    }
+
+    if (isPrivateRoute && !isAuthenticated) {
         return NextResponse.redirect(new URL("/sign-in", request.url));
     }
 
-    if (isPublicRoute && auth) {
-        return NextResponse.redirect(new URL("/profile", request.url));
+    if (isPublicRoute && isAuthenticated) {
+        return NextResponse.redirect(new URL("/", request.url));
     }
 
-    return NextResponse.next();
+    return response;
     }
 
     export const config = {
